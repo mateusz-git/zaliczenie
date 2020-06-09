@@ -66,4 +66,16 @@ class DishWasherTest {
 
         assertEquals(runResult.getStatus(), Status.ERROR_FILTER);
     }
+    @Test
+    public void shouldRunProgramWithErrorDoorOpen() {
+        when(door.closed()).thenReturn(false);
+        programConfiguration = ProgramConfiguration.builder()
+                .withTabletsUsed(true)
+                .withFillLevel(FillLevel.FULL)
+                .withProgram(WashingProgram.ECO)
+                .build();
+        RunResult runResult = dishWasher.start(programConfiguration);
+
+        assertEquals(runResult.getStatus(), Status.DOOR_OPEN);
+    }
 }
