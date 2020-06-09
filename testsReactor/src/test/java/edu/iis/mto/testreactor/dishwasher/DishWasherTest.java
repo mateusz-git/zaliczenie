@@ -30,6 +30,8 @@ class DishWasherTest {
 
     private DishWasher dishWasher;
     private ProgramConfiguration programConfiguration;
+    private WashingProgram washingProgram;
+    private FillLevel fillLevel;
 
     @BeforeEach
     public void setUp() {
@@ -45,11 +47,9 @@ class DishWasherTest {
     public void shouldRunProgramWithSuccess() {
         when(door.closed()).thenReturn(true);
         when(dirtFilter.capacity()).thenReturn(100d);
-        programConfiguration = ProgramConfiguration.builder()
-                .withTabletsUsed(true)
-                .withFillLevel(FillLevel.FULL)
-                .withProgram(WashingProgram.ECO)
-                .build();
+        fillLevel = FillLevel.FULL;
+        washingProgram = WashingProgram.ECO;
+        programConfiguration = getProgramConfiguration(fillLevel, washingProgram);
         RunResult runResult = dishWasher.start(programConfiguration);
 
         assertEquals(runResult.getStatus(), Status.SUCCESS);
@@ -60,11 +60,9 @@ class DishWasherTest {
     public void shouldRunProgramWithErrorFilter() {
         when(door.closed()).thenReturn(true);
         when(dirtFilter.capacity()).thenReturn(50d);
-        programConfiguration = ProgramConfiguration.builder()
-                .withTabletsUsed(true)
-                .withFillLevel(FillLevel.FULL)
-                .withProgram(WashingProgram.ECO)
-                .build();
+        fillLevel = FillLevel.FULL;
+        washingProgram = WashingProgram.ECO;
+        programConfiguration = getProgramConfiguration(fillLevel, washingProgram);
         RunResult runResult = dishWasher.start(programConfiguration);
 
         assertEquals(runResult.getStatus(), Status.ERROR_FILTER);
@@ -73,11 +71,9 @@ class DishWasherTest {
     @Test
     public void shouldRunProgramWithErrorDoorOpen() {
         when(door.closed()).thenReturn(false);
-        programConfiguration = ProgramConfiguration.builder()
-                .withTabletsUsed(true)
-                .withFillLevel(FillLevel.FULL)
-                .withProgram(WashingProgram.ECO)
-                .build();
+        fillLevel = FillLevel.FULL;
+        washingProgram = WashingProgram.ECO;
+        programConfiguration = getProgramConfiguration(fillLevel, washingProgram);
         RunResult runResult = dishWasher.start(programConfiguration);
 
         assertEquals(runResult.getStatus(), Status.DOOR_OPEN);
@@ -87,16 +83,22 @@ class DishWasherTest {
     public void shouldVerifyCorrectOrder() throws PumpException, EngineException {
         when(door.closed()).thenReturn(true);
         when(dirtFilter.capacity()).thenReturn(100d);
-        programConfiguration = ProgramConfiguration.builder()
-                .withTabletsUsed(true)
-                .withFillLevel(FillLevel.FULL)
-                .withProgram(WashingProgram.RINSE)
-                .build();
+        fillLevel = FillLevel.FULL;
+        washingProgram = WashingProgram.RINSE;
+        programConfiguration = getProgramConfiguration(fillLevel, washingProgram);
         dishWasher.start(programConfiguration);
 
         InOrder callOrder = inOrder(waterPump, engine);
-        callOrder.verify(waterPump).pour(FillLevel.FULL);
-        callOrder.verify(engine).runProgram(WashingProgram.RINSE);
+        callOrder.verify(waterPump).pour(fillLevel);
+        callOrder.verify(engine).runProgram(washingProgram);
         callOrder.verify(waterPump).drain();
+    }
+    
+    private ProgramConfiguration getProgramConfiguration(FillLevel fillLevel, WashingProgram washingProgram) {
+        return ProgramConfiguration.builder()
+                .withTabletsUsed(true)
+                .withFillLevel(fillLevel)
+                .withProgram(washingProgram)
+                .build();
     }
 }
