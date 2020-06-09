@@ -52,4 +52,18 @@ class DishWasherTest {
         assertEquals(runResult.getStatus(), Status.SUCCESS);
         assertEquals(runResult.getRunMinutes(), WashingProgram.ECO.getTimeInMinutes());
     }
+
+    @Test
+    public void shouldRunProgramWithErrorFilter() {
+        when(door.closed()).thenReturn(true);
+        when(dirtFilter.capacity()).thenReturn(50d);
+        programConfiguration = ProgramConfiguration.builder()
+                .withTabletsUsed(true)
+                .withFillLevel(FillLevel.FULL)
+                .withProgram(WashingProgram.ECO)
+                .build();
+        RunResult runResult = dishWasher.start(programConfiguration);
+
+        assertEquals(runResult.getStatus(), Status.ERROR_FILTER);
+    }
 }
