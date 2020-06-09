@@ -80,7 +80,7 @@ class DishWasherTest {
     }
 
     @Test
-    public void shouldVerifyCorrectOrder() throws PumpException, EngineException {
+    public void shouldVerifyCorrectOrderWhenWashingProgramIsRinse() throws PumpException, EngineException {
         when(door.closed()).thenReturn(true);
         when(dirtFilter.capacity()).thenReturn(100d);
         fillLevel = FillLevel.FULL;
@@ -93,7 +93,25 @@ class DishWasherTest {
         callOrder.verify(engine).runProgram(washingProgram);
         callOrder.verify(waterPump).drain();
     }
-    
+
+    @Test
+    public void shouldVerifyCorrectOrderWhenWashingProgramIsNotRinse() throws PumpException, EngineException {
+        when(door.closed()).thenReturn(true);
+        when(dirtFilter.capacity()).thenReturn(100d);
+        fillLevel = FillLevel.FULL;
+        washingProgram = WashingProgram.NIGHT;
+        programConfiguration = getProgramConfiguration(fillLevel, washingProgram);
+        dishWasher.start(programConfiguration);
+
+        InOrder callOrder = inOrder(waterPump, engine);
+        callOrder.verify(waterPump).pour(fillLevel);
+        callOrder.verify(engine).runProgram(washingProgram);
+        callOrder.verify(waterPump).drain();
+        callOrder.verify(waterPump).pour(FillLevel.FULL);
+        callOrder.verify(engine).runProgram(WashingProgram.RINSE);
+        callOrder.verify(waterPump).drain();
+    }
+
     private ProgramConfiguration getProgramConfiguration(FillLevel fillLevel, WashingProgram washingProgram) {
         return ProgramConfiguration.builder()
                 .withTabletsUsed(true)
